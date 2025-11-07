@@ -1,0 +1,6 @@
+<component name="MotorBridge">
+    <port name="CmdSpeed" type="input" dataType="F32"/>
+    <port name="CmdEnable" type="input" dataType="bool"/>
+    <port name="FbPosition" type="output" dataType="F32"/>
+    <port name="FbVelocity" type="output" dataType="F32"/>
+</component>

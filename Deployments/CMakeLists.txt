@@ -1,1 +1,1 @@
-add_fprime_deployment(Stage8MotorBridgeDeployment)
+add_fprime_subdirectory(MotorBridgeDeployment)

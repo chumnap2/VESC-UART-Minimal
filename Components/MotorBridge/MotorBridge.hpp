@@ -1,17 +1,32 @@
-#ifndef STAGE8_MOTOR_BRIDGE_HPP
-#define STAGE8_MOTOR_BRIDGE_HPP
+#ifndef MOTORBRIDGE_HPP
+#define MOTORBRIDGE_HPP
 
-#include "MotorBridgeComponentAc.hpp"
+#include "MotorBridgeCfg.hpp"
+#include "Fw/Types/BasicTypes.hpp"
+#include "Fw/Com/ComBuffer.hpp"
+#include "Fw/Com/Port/CmdPort.hpp"
+#include "Fw/Com/Port/LogTextPort.hpp"
+#include "Fw/Comp/ActiveComponentBase.hpp"
 
-namespace Stage8 {
+class MotorBridge : public Fw::ActiveComponentBase {
+public:
+    MotorBridge(const char* compName);
+    ~MotorBridge();
 
-class MotorBridge : public MotorBridgeComponentBase {
-  public:
-    explicit MotorBridge(const char* compName);
-    void init();
-    void handleCmd(int arg);
+    void init(void);
+
+    // Command handler
+    void CmdIn_handler(const Fw::CmdPacket& cmd);
+
+    // Run loop for motor control
+    void runLoop();
+
+    // Logging helper
+    void Log(const Fw::String& message);
+
+private:
+    U32 currentSpeed;
+    int adcFeedback;
 };
 
-} // namespace Stage8
-
-#endif
+#endif // MOTORBRIDGE_HPP

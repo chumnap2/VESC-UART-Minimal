@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="MotorBridge">
+    <input name="MotorCmd" type="U32" />
+    <output name="MotorStatus" type="U32" />
+</component>

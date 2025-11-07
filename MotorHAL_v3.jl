@@ -1,36 +1,29 @@
-module MotorHAL_v2
+module MotorHAL_v3
+
 using SerialPorts
 
-# Open the serial port once at module load
+# Open serial port
 const sp = SerialPort("/dev/ttyACM0", 115200)
 println("Opening motor port: /dev/ttyACM0")
 
-# --------------------------------------------------
-# Helper function to send a command to the motor
-# --------------------------------------------------
+# Send command helper
 function send_cmd(cmd::String)
     write(sp, cmd * "\n")
     flush(sp)
 end
 
-# --------------------------------------------------
-# Set motor speed (e.g., 0.0–1.0)
-# --------------------------------------------------
+# Set motor speed
 function set_motor_hardware_speed(speed::Float64)
     cmd = "SPEED:$speed"
     send_cmd(cmd)
     println("Sent: $cmd")
-    return 10
 end
 
-# --------------------------------------------------
 # Read motor position
-# --------------------------------------------------
 function read_motor_position(timeout::Float64 = 2.0)
     send_cmd("POS?")
     start_time = time()
     buffer = ""
-
     while true
         data = String(SerialPorts.readavailable(sp))
         if !isempty(data)
@@ -44,14 +37,12 @@ function read_motor_position(timeout::Float64 = 2.0)
                 return val
             end
         end
-
         if time() - start_time > timeout
             @warn "Timeout: no response from motor"
             return nothing
         end
-
         sleep(0.05)
     end
 end
 
-end # module MotorHAL_v2
+end # module MotorHAL_v3
