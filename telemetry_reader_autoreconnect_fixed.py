@@ -1,52 +1,49 @@
-import logging
 import time
-from pyvesc.VESC import VESC  # Use VESC class directly
+import logging
+from serial import Serial
+from pyvesc.VESC.VESC import VESC
+from pyvesc.VESC.messages import GetValues
+
+# Logging setup
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
 
 SERIAL_PORT = "/dev/ttyACM1"
-RECONNECT_DELAY = 2
-
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+BAUDRATE = 115200
+RECONNECT_DELAY = 2  # seconds
+SPIN_DURATION = 4    # seconds
 
 def open_vesc():
+    while True:
+        try:
+            vesc = VESC(serial_port=SERIAL_PORT, baudrate=BAUDRATE, timeout=0.5)
+            logger.info("Serial port opened successfully.")
+            return vesc
+        except Exception as e:
+            logger.error(f"Error opening serial port: {e}")
+            logger.info(f"Reconnect in {RECONNECT_DELAY}s...")
+            time.sleep(RECONNECT_DELAY)
+
+def safe_spin_ramp(vesc: VESC):
     try:
-        vesc = VESC(SERIAL_PORT)  # Pass string port
-        logging.info("Serial port opened successfully.")
-        return vesc
-    except Exception as e:
-        logging.error(f"Error opening serial port: {e}")
-        return None
-
-def safe_spin(vesc, duration=2.0, steps=20):
-    """Ramp motor up and down safely."""
-    if not vesc:
-        return
-
-    try:
-        logging.info("Starting safe motor spin ramp...")
-        for i in range(steps):
-            duty = i / steps * 0.1  # small duty cycle
-            vesc.set_duty_cycle(duty)
-            time.sleep(duration / steps)
-
-        for i in reversed(range(steps)):
-            duty = i / steps * 0.1
-            vesc.set_duty_cycle(duty)
-            time.sleep(duration / steps)
-
-        logging.info("Spin complete. Stopping motor...")
+        logger.info("Starting safe motor spin ramp...")
+        vesc.set_duty_cycle(0.2)  # ramp to low duty cycle
+        time.sleep(SPIN_DURATION)
+        logger.info("Spin complete. Stopping motor...")
         vesc.set_duty_cycle(0.0)
-    except AttributeError as e:
-        logging.error(f"VESC method not available: {e}")
+    except Exception as e:
+        logger.warning(f"Telemetry read error: {e}")
 
 def main():
     while True:
         vesc = open_vesc()
-        if vesc:
-            safe_spin(vesc)
-            time.sleep(1)
-        else:
-            logging.info(f"Reconnect in {RECONNECT_DELAY}s...")
-            time.sleep(RECONNECT_DELAY)
+        safe_spin_ramp(vesc)
+        vesc.serial_port.close()
+        time.sleep(RECONNECT_DELAY)
 
 if __name__ == "__main__":
     main()
