@@ -1,0 +1,3 @@
+/home/chumnap/fprime/Stage3/minimal_chibios/build_vesc_ramp/CMakeFiles/minimal_vesc_ramp.dir
+/home/chumnap/fprime/Stage3/minimal_chibios/build_vesc_ramp/CMakeFiles/edit_cache.dir
+/home/chumnap/fprime/Stage3/minimal_chibios/build_vesc_ramp/CMakeFiles/rebuild_cache.dir

@@ -1,11 +1,16 @@
-cmake_minimum_required(VERSION 3.20)
-include("${FPRIME_PROJECT_ROOT}/cmake/FPrime.cmake")
+cmake_minimum_required(VERSION 3.10)
+project(minimal_vesc_ramp LANGUAGES CXX)
 
-# Register this as a top-level module
-register_fprime_module(Stage8MotorBridge)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Add subdirectory for the component
-add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Components/MotorBridge")
+include_directories(${PROJECT_SOURCE_DIR}/include)
 
-# Optionally: Create a combined library if you want one .a file
-register_fprime_library(Stage8MotorBridge)
+set(SOURCES
+    src/main.cpp
+)
+
+add_executable(minimal_vesc_ramp ${SOURCES})
+
+find_package(Threads REQUIRED)
+target_link_libraries(minimal_vesc_ramp PRIVATE Threads::Threads)
