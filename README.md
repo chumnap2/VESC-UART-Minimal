@@ -66,3 +66,16 @@ For real hardware, ramping and safety checks are handled in MotorHAL.update!.
 License
 
 MIT License
+## PyVESC Library
+
+- A fully working PyVESC clone is included in this project at `pyvesc_working/`.
+- The library is **patched for Python 3.12**, including `base.py` fixes.
+- **No pip install pyvesc is required** — the project uses the local copy.
+- Ensure you activate the virtual environment before running scripts:
+
+```bash
+source ~/fprime/fprime-venv/bin/activate
+
+All scripts (telemetry_reader_autoreconnect_fixed.py, fprime_motor_client.py, MotorHAL_test.jl) are ready to run with this environment.
+
+Avoid installing PyVESC via pip in the same virtual environment, as it may conflict with the local clone.
