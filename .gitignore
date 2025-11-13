@@ -9,3 +9,5 @@ fprime-venv/
 # OS files
 *.swp
 .DS_Store
+motor_response.png
+*.jl~
