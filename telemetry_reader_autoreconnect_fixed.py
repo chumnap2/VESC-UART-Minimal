@@ -12,7 +12,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-SERIAL_PORT = "/dev/ttyACM1"
+import glob
+ports = glob.glob("/dev/ttyACM*")
+SERIAL_PORT = ports[0] if ports else "/dev/ttyACM0"
+
 BAUDRATE = 115200
 RECONNECT_DELAY = 2  # seconds
 SPIN_DURATION = 4    # seconds
