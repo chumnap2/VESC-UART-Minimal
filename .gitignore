@@ -11,3 +11,5 @@ fprime-venv/
 .DS_Store
 motor_response.png
 *.jl~
+*.png
+*.jl~
