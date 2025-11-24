@@ -1,130 +1,67 @@
-module MotorBridgeServer
-
 using Sockets
 using PyCall
 
-# -------------------------------
-# Motor parameters
-const MIN_DUTY = 0.05   # minimum safe duty
-const MAX_DUTY = 1.0    # maximum duty
-const STEP = 0.01       # ramp step
-const STEP_TIME = 0.05  # seconds per step
-const SERVER_PORT = 9001
+println("🚀 Starting Julia MotorBridgeServer...")
 
-# -------------------------------
-# Python VESC interface
-py"""
-import sys
-import os
+# Load Python VESC module
+vesc_mod = pyimport("vescminimal_nov20")
+vesc = vesc_mod.VESC("/dev/ttyACM1")
 
-# Ensure local pyvesc_working is visible
-sys.path.insert(0, os.getcwd() + "/pyvesc_working")
+# Safe startup
+vesc.set_duty_cycle(0.0)
+println("✅ VESC object created and motor initialized at 0 duty")
 
-from pyvesc.VESC import VESC
-import time
+HOST = ip"127.0.0.1"
+PORT = 5555
 
-serial_port = "/dev/ttyACM1"
-vesc = VESC(serial_port, baudrate=115200)
-current_duty = 0.0
+server = listen(HOST, PORT)
+println("✅ TCP MotorBridgeServer listening on $HOST:$PORT")
 
-def enable_motor():
-    global current_duty
-    current_duty = 0.0
-    vesc.set_duty_cycle(current_duty)
-    print("Motor enabled ✅")
+function handle_client(sock)
+    println("✅ Client connected: ", sock)
+    while isopen(sock)
+        try
+            line = readline(sock)
+            cmd = strip(line)
 
-def disable_motor():
-    global current_duty
-    set_motor_duty(0.0)
-    print("Motor disabled ⛔")
-
-def set_motor_duty(target_duty):
-    global current_duty
-    # Clamp duty
-    target_duty = max($MIN_DUTY, min($MAX_DUTY, target_duty))
-    # Smooth ramp
-    while abs(current_duty - target_duty) > 0.001:
-        if current_duty < target_duty:
-            current_duty = min(current_duty + $STEP, target_duty)
-        else:
-            current_duty = max(current_duty - $STEP, target_duty)
-        vesc.set_duty_cycle(current_duty)
-        time.sleep($STEP_TIME)
-"""
-
-# Bind Python functions
-enable_motor = py"enable_motor"
-disable_motor = py"disable_motor"
-set_motor_duty = py"set_motor_duty"
-
-# -------------------------------
-# Julia motor abstraction
-mutable struct RealMotor
-    speed::Float64
-    enabled::Bool
-end
-
-motor = RealMotor(0.0, false)
-
-function enable!(m::RealMotor)
-    m.enabled = true
-    enable_motor()
-    println("Motor enabled ✅")
-end
-
-function disable!(m::RealMotor)
-    m.enabled = false
-    disable_motor()
-    println("Motor disabled ⛔")
-end
-
-function set_speed!(m::RealMotor, duty::Float64)
-    duty = max(MIN_DUTY, min(MAX_DUTY, duty))
-    m.speed = duty
-    set_motor_duty(duty)
-    println("Motor duty set to ", duty)
-end
-
-# -------------------------------
-# TCP client handler
-function handle_client(sock::TCPSocket, motor::RealMotor)
-    try
-        while !eof(sock)
-            cmd = strip(readline(sock))
-            if startswith(cmd, "enable")
-                enable!(motor)
-            elseif startswith(cmd, "disable")
-                disable!(motor)
-            elseif startswith(cmd, "set_speed")
-                args = split(cmd)
-                if length(args) == 2
-                    duty = parse(Float64, args[2])
-                    set_speed!(motor, duty)
-                else
-                    println("Invalid set_speed command")
-                end
-            else
-                println("Unknown command: $cmd")
+            if cmd == ""
+                continue
             end
+
+            println("📥 Command received: $cmd")
+
+            if cmd == "enable"
+                println("⚡ Enable received (no VESC action required)")
+
+            elseif startswith(cmd, "duty")
+                parts = split(cmd)
+                if length(parts) == 2
+                    duty = parse(Float64, parts[2])
+                    println("➡️ Setting duty to $duty")
+                    pkt = vesc.set_duty_cycle(duty)
+                    println("📦 Packet sent")
+                else
+                    println("❌ Invalid duty format")
+                end
+
+            elseif cmd == "stop"
+                println("🔴 Stop command")
+                vesc.set_duty_cycle(0.0)
+
+            else
+                println("❌ Unknown command: $cmd")
+            end
+
+        catch e
+            println("❌ Client error: ", e)
+            break
         end
-    finally
-        close(sock)
     end
+    close(sock)
+    println("✅ Client disconnected")
 end
 
-function run_motor_server(port::Int=SERVER_PORT)
-    println("Starting MotorBridgeServer on port $port...")
-    server = listen(port)
-    while true
-        sock = accept(server)
-        @async handle_client(sock, motor)
-    end
+while true
+    client = accept(server)
+    @async handle_client(client)
 end
-
-# -------------------------------
-# Main entry point
-if abspath(PROGRAM_FILE) == @__FILE__
-    run_motor_server(SERVER_PORT)
-end
-
-end # module

@@ -1,0 +1,29 @@
+# Stage8MotorBridge 🚀
+
+Julia + Python based Motor Bridge for VESC controlled BLDC motor, integrated with NASA F´ Stage 8 project.
+
+## ✅ Features
+- Julia TCP MotorBridgeServer
+- Python motor_client controller
+- Direct VESC serial control via vescminimal_nov20
+- Real motor verified spinning
+- PyCall integration
+
+## ⚙️ Requirements
+
+System:
+- Ubuntu 20.04+
+- Julia 1.9+
+- Python 3.11
+- VESC compatible ESC
+
+Python packages:
+pip install pyserial
+
+Julia packages:
+using Pkg
+Pkg.add("PyCall")
+
+## 🔧 How to Run
+
+### Start Motor Server
